@@ -1,58 +1,175 @@
-## Project: Build a Traffic Sign Recognition Program
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
+# **Traffic Sign Recognition** 
 
-Overview
+## Writeup
+
 ---
-In this project, you will use what you've learned about deep neural networks and convolutional neural networks to classify traffic signs. You will train and validate a model so it can classify traffic sign images using the [German Traffic Sign Dataset](http://benchmark.ini.rub.de/?section=gtsrb&subsection=dataset). After the model is trained, you will then try out your model on images of German traffic signs that you find on the web.
 
-We have included an Ipython notebook that contains further instructions 
-and starter code. Be sure to download the [Ipython notebook](https://github.com/udacity/CarND-Traffic-Sign-Classifier-Project/blob/master/Traffic_Sign_Classifier.ipynb). 
+**Build a Traffic Sign Recognition Project**
 
-We also want you to create a detailed writeup of the project. Check out the [writeup template](https://github.com/udacity/CarND-Traffic-Sign-Classifier-Project/blob/master/writeup_template.md) for this project and use it as a starting point for creating your own writeup. The writeup can be either a markdown file or a pdf document.
-
-To meet specifications, the project will require submitting three files: 
-* the Ipython notebook with the code
-* the code exported as an html file
-* a writeup report either as a markdown or pdf file 
-
-Creating a Great Writeup
----
-A great writeup should include the [rubric points](https://review.udacity.com/#!/rubrics/481/view) as well as your description of how you addressed each point.  You should include a detailed description of the code used in each step (with line-number references and code snippets where necessary), and links to other supporting documents or external references.  You should include images in your writeup to demonstrate how your code works with examples.  
-
-All that said, please be concise!  We're not looking for you to write a book here, just a brief description of how you passed each rubric point, and references to the relevant code :). 
-
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup.
-
-The Project
----
 The goals / steps of this project are the following:
-* Load the data set
+* Load the data set (see below for links to the project data set)
 * Explore, summarize and visualize the data set
 * Design, train and test a model architecture
 * Use the model to make predictions on new images
 * Analyze the softmax probabilities of the new images
 * Summarize the results with a written report
 
-### Dependencies
-This lab requires:
 
-* [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit)
+[//]: # (Image References)
 
-The lab environment can be created with CarND Term1 Starter Kit. Click [here](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) for the details.
+[img_jitter]: ./writeup_images/jitter.png "Jitering"
+[img_distribution]: ./writeup_images/test_distribution.png "Distribution"
+[img_new]: ./writeup_images/new_images.png "New test images"
+[img_new_results]: ./writeup_images/new_images_results.png "New test images - results"
+[img_normalization]: ./writeup_images/normalization.png "Normalization"
 
-### Dataset and Repository
+---
+### Data Set Summary & Exploration
 
-1. Download the data set. The classroom has a link to the data set in the "Project Instructions" content. This is a pickled dataset in which we've already resized the images to 32x32. It contains a training, validation and test set.
-2. Clone the project, which contains the Ipython notebook and the writeup template.
-```sh
-git clone https://github.com/udacity/CarND-Traffic-Sign-Classifier-Project
-cd CarND-Traffic-Sign-Classifier-Project
-jupyter notebook Traffic_Sign_Classifier.ipynb
-```
+The data set was loaded using pickle. Basics statistics were gathered: 
 
-### Requirements for Submission
-Follow the instructions in the `Traffic_Sign_Classifier.ipynb` notebook and write the project report using the writeup template as a guide, `writeup_template.md`. Submit the project code and writeup document.
+* The size of training set is 34799
+* The size of the validation set is 4410
+* The size of test set is 12630
+* The shape of a traffic sign image is (32, 32, 3)
+* The number of unique classes/labels in the data set is 43
 
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+
+I calculated the histogram of training set to visualize the distribution of traffic signs:
+
+![Test set distribution][img_distribution]
+
+It appears that that some values are heavily underrepresented, which caused problems during initial training. This was addressed by augumenting the data set (described below). 
+
+### Model Architecture
+
+#### Data pre-processing
+
+Each image in training set is preprocessed:
+* Convert to grayscale
+* Increase local contrast using CLAHE
+* Normalize
+
+While colors of signs give a lot of information to humans, they did not actually improve my network: grayscale performed better. I decided to convert images to gray.
+I used the CLAHE function from OpenCV to increase which performs adaptive histogram equalization. This emphasises the contours on the signs, improving the network efficiency.
+
+Examples of processed images:
+![Preprocess][img_normalization]
+
+As the last step, image is normalized to reduce mean and provide better numerical stability. 
+
+#### Data augmentation
+As described in _Data Set Summary & Exploration_, some traffic signs are underrepresented in the training set, which causes bad network performance for those labels.
+I have therefore decided to extend the data set. Each sign with have n additional images, where n is _(Count of images for most represented sign)-(Count of images in current set) + 100.
+
+Each additional image is generated by using the following algorithm:
+* Translate randomly in X-axis by (-2;2) pixels range
+* Translate randomly in Y-axis by (-2;2) pixels range
+* Rotate randomly in (-10;10) degree range
+* Scale randomly in X-axis by (0.9;1.1) factor
+* Scale randomly in Y-axis by (0.9;1.1) factor
+
+This introduces a small jitter to the images, which actually greatly increased efficiency. It was important to scale independently in x and y axis to simulate better camera deformations.   
+
+As the result, the training set has **90730** items.
+
+Examples of augmented images:
+
+![Augumented images][img_jitter]
+
+As a last step, I normalized the image data because ...
+
+
+
+#### 2. Model architecture
+I decided to implement architecture based on _Traffic Sign Recognition with Multi-Scale Convolutional Networks_ by _Pierre Sermanet and Yann LeCun_.
+My network consists of three convolution layers and two fully connected ones. Regularization by dropout is used on full layers, and a kind of inception is used by feeding first of them by results of both second and third convolution.
+All activation functions are relu.
+
+| Layer         		|     Description	        					|  Output  |
+|:---------------------:|:---------------------------------------------:| :--------|
+| Input         		| 32x32x1 Graysacale image 						| 
+| Convolution 5x5     	| 1x1 stride, VALID padding 	                | 28x28x6  |
+| RELU					|												|          |
+| Max pooling	      	| 2x2 stride 		                        	| 14x14x6  |
+|                       |                                               |          |
+| 2nd Convolution 5x5	| 1x1 strinde, VALID padding	                | 10x10x16 |
+| RELU                  |                                               |          | 
+| `C2` Max pooling      | 2x2 stride                                    | 5x5x16   | 
+|                       |                                               |          |
+| `C3` 3rd Convolution 5x5	| 1x1 stride, VALID padding	                | 1x1x400  |
+|                       |                                               |          |
+| Merge input           | Flatten `C2` and `C3`. Concat results.        | 800      |
+| Dropout               | 50%                                           |          |
+| Fully connected		|           									| 150      |
+| Dropout               | 50%                                           |          |
+| Fully connected 		| Classifier        							| 43       |
+
+
+
+#### 3. Model training
+The model was trained using loss operation and optimizer from LeNet lab as they provided good performance:
+* Loss operation: reduce mean of softmax cross entropy
+* Optimizer: Adam
+
+Data was shuffled before training.
+Training had 30 Epochs, as the learning curve flattened afterwards.
+Batch size was 150.
+
+
+#### 4. Approach
+
+Final results of my model are:
+* training set accuracy of 99,7%
+* validation set accuracy of 98,1%
+* test set accuracy of 96,7%
+
+I started from generic LeNet model from the lab and original color images (normalized). The model was clearly overfitting, having much lower accuracy on validation and set.
+At the first stage, I focused on improving the pre-processing. I have found that gray images produce better effects and color. I introduced simple histogram equalization and finally changed it to CLAHE.
+
+At the second stage, I changed the model architecture to one described in _Traffic Sign Recognition with Multi-Scale Convolutional Networks_  paper. They have achieved great results so I wanted to check how close I can get.
+The change involved introducing third convolutional layer, dropping one fully-connected and introducing inception.
+
+The results were still not fully satisfying, so I decided to augment the training data. I have decided to include rotation, translation and scale to produce extended data set. Initially I used one random parameter for scale, but it appeared that network behaves better is scaling is done independently on x and y axis.
+
+Finally, I introduced regularization by using dropout of 50% on inputs of fully connected layers. I tried different percentages, but 50% worked best.
+
+The results are pretty good, although not as good as Sermanet and LeCun achieved. They don't describe their network in details, but this may be by the was they preprocess images or adjust hyperparameters. They also explictly mention using more complicated activation function, which can also may have effect on results.  
+Anyway, the model is still performing well on not-known images.
+
+### Test a Model on New Images
+
+#### New traffic images 
+
+I have used Google StreetView (now partially present in Germany) to gather images of some real traffic signs:
+
+ 
+Here are five German traffic signs that I found on the web:
+
+![Streetview images][img_new]
+
+This images include both rather good quality signs that should not give network any difficulty, but also a few tricky examples"
+* Yield covers only on 2/3 of the image
+* Speed limit (30km/h) is warped, as it is taken from the edge of wide angle camera
+* Keep right is taken from the angle, so it's more like ellipse than circle
+* Turn left ahead has a big sticker on it
+
+Finally, the Speed limit (70km/h) *is not a German but a Polish sign* and uses different font. This involves no difficulty for humans, but might be a huge challenge for neural network which had no chance to see such image before.
+
+#### 2. Results
+
+The model recognized *all* the signs correctly, therefore achieving the accuracy of 100%.
+
+The probabilities of predictions is as follows:
+
+
+Here are the results of the prediction:
+![Streetview images][img_new_results]
+
+Most of the signs are recognized with very high probability.
+There are two notable exceptions:
+* Speed limit (30km/h): although probability is 93% it's clearly seen that other speed limit signs have high ranking
+* Speed limit (70km/d) - Polish sign. Network barely made it, giving the correct sign probability of just 51%. It's worth noting that the second most probable was not a speed limit sign but general caution, which does not even have circular shape. 
+
+It's clearly visible that speed limits are most problematic. For network, it's pretty easy to mismatch 30 with 80, especially if the quality is not perfect (blurred, noisy image). This seems to be the biggest problem, as recently there were there [articles how easily is to fool a tesla on 3X speed limit sign!](https://www.businessinsider.com/hackers-trick-tesla-accelerating-85mph-using-tape-2020-2?IR=T)
 

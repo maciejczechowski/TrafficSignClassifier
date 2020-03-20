@@ -139,7 +139,7 @@ Anyway, the model is still performing well on not-known images.
 
 ### Test a Model on New Images
 
-#### New traffic images 
+#### New traffic images ą
 
 I have used Google StreetView (now partially present in Germany) to gather images of some real traffic signs:
 
@@ -160,10 +160,10 @@ Finally, the Speed limit (70km/h) *is not a German but a Polish sign* and uses d
 
 The model recognized *all* the signs correctly, therefore achieving the accuracy of 100%.
 
-The probabilities of predictions is as follows:
 
 
 Here are the results of the prediction:
+
 ![](writeup_images/result_1.png)
 
 Correctly predicted the sign.

@@ -121,8 +121,8 @@ Batch size was 150.
 
 Final results of my model are:
 * training set accuracy of 99,7%
-* validation set accuracy of 98,1%
-* test set accuracy of 96,7%
+* validation set accuracy of 98,8%
+* test set accuracy of 96,9%
 
 I started from generic LeNet model from the lab and original color images (normalized). The model was clearly overfitting, having much lower accuracy on validation and set.
 At the first stage, I focused on improving the pre-processing. I have found that gray images produce better effects and color. I introduced simple histogram equalization and finally changed it to CLAHE.
@@ -164,12 +164,50 @@ The probabilities of predictions is as follows:
 
 
 Here are the results of the prediction:
-![Streetview images][img_new_results]
+![](writeup_images/result_1.png)
 
-Most of the signs are recognized with very high probability.
-There are two notable exceptions:
-* Speed limit (30km/h): although probability is 93% it's clearly seen that other speed limit signs have high ranking
-* Speed limit (70km/d) - Polish sign. Network barely made it, giving the correct sign probability of just 51%. It's worth noting that the second most probable was not a speed limit sign but general caution, which does not even have circular shape. 
+Correctly predicted the sign.
+
+---
+![](writeup_images/result2.png)
+
+Correctly predicted the sign.
+
+---
+![](writeup_images/result3.png)
+
+Correctly predicted the sign.
+
+---
+![](writeup_images/result4.png)
+
+Correctly predicted the sign.
+
+---
+![](writeup_images/result5.png)
+
+Correctly predicted the sign, but the probability is just 78%.
+Other speed limit signs have high rankings, meaning network could misinterpret speed limit signs.
+
+---
+![](writeup_images/result6.png)
+
+Correctly predicted the sign.
+
+---
+![](writeup_images/result7.png)
+
+Correctly predicted the sign.
+
+---
+![](writeup_images/result8.png)
+
+Correctly predicted the sign, even if the arrow head is slightly different and there is a big sticker on a sign.
+
+---
+![](writeup_images/result9.png)
+Polish sign. Network made it, nut it's worth noting that the second most probable was not a speed limit sign but general caution, which does not even have circular shape.
+
 
 It's clearly visible that speed limits are most problematic. For network, it's pretty easy to mismatch 30 with 80, especially if the quality is not perfect (blurred, noisy image). This seems to be the biggest problem, as recently there were there [articles how easily is to fool a tesla on 3X speed limit sign!](https://www.businessinsider.com/hackers-trick-tesla-accelerating-85mph-using-tape-2020-2?IR=T)
 

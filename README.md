@@ -206,6 +206,7 @@ Correctly predicted the sign, even if the arrow head is slightly different and t
 
 ---
 ![](writeup_images/result9.png)
+
 Polish sign. Network made it, nut it's worth noting that the second most probable was not a speed limit sign but general caution, which does not even have circular shape.
 
 
